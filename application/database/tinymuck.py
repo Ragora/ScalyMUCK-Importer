@@ -28,6 +28,8 @@ class Importer(abstraction.Database):
     _type_lookups = None
 
     def __init__(self, target):
+        print("TinyMUCK INFO: Importing from file '%s' ... " % target)
+
         self._type_lookups = {
             "player": self._read_player,
             "room": self._read_room,
@@ -89,7 +91,7 @@ class Importer(abstraction.Database):
         # Some players may not have a password -- this is the case for the minimal DB Guest account
         password = None
         if ("pass" not in properties):
-            print("WARNING: Found player '%s' without a password field." % name)
+            print("TinyMUCK WARNING: Found player '%s' without a password field." % name)
         else:
             password = properties["pass"]
 
@@ -146,7 +148,7 @@ class Importer(abstraction.Database):
             player = self._players[player_identifier]
 
             if (player._room_identifier not in self._rooms):
-                print("WARNING: Player '%s' has an unknown room!" % player.name)
+                print("TinyMUCK WARNING: Player '%s' has an unknown room!" % player.name)
             else:
                 player.room = self._rooms[player._room_identifier]
 
@@ -155,7 +157,7 @@ class Importer(abstraction.Database):
             room = self._rooms[room_identifier]
 
             if (room._owner_identifier not in self._players):
-                print("WARNING: Room '%s' has an unknown owner!" % room.name)
+                print("TinyMUCK WARNING: Room '%s' has an unknown owner!" % room.name)
             else:
                 room.owner = self._players[room._owner_identifier]
 
@@ -164,16 +166,16 @@ class Importer(abstraction.Database):
             thing = self._things[thing_identifier]
 
             if (thing._owner_identifier not in self._players):
-                print("WARNING: Thing '%s' has an unknown owner!" % thing.name)
+                print("TinyMUCK WARNING: Thing '%s' has an unknown owner!" % thing.name)
             else:
                 thing.owner = self._players[thing._owner_identifier]
 
             if (thing._room_identifier not in self._rooms):
-                print("WARNING: Thing '%s' has an unknown room!" % thing.name)
+                print("TinyMUCK WARNING: Thing '%s' has an unknown room!" % thing.name)
             else:
                 thing.room = self._rooms[thing._room_identifier]
 
-        print("TinyMUCK: Database Finalization OK!")
+        print("TinyMUCK INFO: Database Finalization OK!")
 
 
     def _read_objects(self, payload):
@@ -183,9 +185,9 @@ class Importer(abstraction.Database):
             entry_type = entry_payload[1].lower().split()[0]
 
             if (entry_type not in self._type_lookups):
-                print("WARNING: Unknown object type '%s'!" % entry_type)
+                print("TinyMUCK WARNING: Unknown object type '%s'!" % entry_type)
                 self._type_lookups[entry_type] = self._read_null
             else:
                 self._type_lookups[entry_type](entry_payload)
 
-        print("TinyMUCK: Database Read OK!")
+        print("TinyMUCK INFO: Database Read OK!")
