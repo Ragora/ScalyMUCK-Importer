@@ -1,5 +1,7 @@
 """
     main.py
+    
+    Main Python source file for the ScalyMUCK importer software. 
 
     Copyright (c) 2016 Robert MacGregor
     This software is licensed under the MIT license. Refer to LICENSE.txt for
@@ -11,6 +13,10 @@ import sys
 import database
 
 class Application(object):
+    """
+        Class representing the application runtime.
+    """
+    
     def _print_usage(self):
         print("Usage: %s <database type> <input file>" % sys.argv[0])
 

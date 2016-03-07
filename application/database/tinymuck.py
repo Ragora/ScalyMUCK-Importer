@@ -1,5 +1,8 @@
 """
     tinymuck.py
+    
+    Python source file implementing the TinyMUCK database generalization
+    system for the ScalyMUCK database import software.
 
     Copyright (c) 2016 Robert MacGregor
     This software is licensed under the MIT license. Refer to LICENSE.txt for
@@ -12,6 +15,10 @@ import abstraction
 import errors
 
 class Importer(abstraction.Database):
+    """
+        The main importer class. Luckily, TinyMUCK uses a relatively simple text-based
+        format that we're going to use regular expressions to parse.
+    """
     _header_regex = re.compile("([A-z]| )+: \S+")
     _property_regex = re.compile("([A-z]| )+:[i|\\^|&]+:\S*")
 
@@ -38,12 +45,13 @@ class Importer(abstraction.Database):
 
         with open(target, "r") as handle:
             payload_string = handle.read()
-            payload = payload_string.split("\n")
+            header = payload_string.split("\n")[0]
 
             # First line should read this
-            if (payload[0] != "***Firiss TinyMUCK 2.3 DUMP Format v1***"):
+            if (header != "***Firiss TinyMUCK 2.3 DUMP Format v1***"):
                 raise errors.ImporterError("Failed to read database header!")
 
+            # We ignore a handful of lines of global database properties as they're of no particular use here
             self._rooms = { }
             self._players = { }
             self._exits = { }
@@ -62,9 +70,6 @@ class Importer(abstraction.Database):
             print("Exits: %u" % len(self._exits))
             print("----------------------------------")
 
-    def _read_null(self, entry):
-        pass
-
     def _read_properties(self, payload):
         result = { }
 
@@ -76,12 +81,15 @@ class Importer(abstraction.Database):
             second_delineator = property.find(":", first_delineator + 1)
 
             key = property[0:first_delineator].lower()
-            flags = property[first_delineator:second_delineator]
+            flags = property[first_delineator + 1:second_delineator]
             value = property[second_delineator + 1:len(property)]
 
             result[key] = value
 
         return result
+
+    def _read_null(self, entry):
+        pass
 
     def _read_player(self, entry):
         properties = self._read_properties(entry[10:])
@@ -179,6 +187,11 @@ class Importer(abstraction.Database):
 
 
     def _read_objects(self, payload):
+        """
+            Internal method that performs the majority of the workload of the conversion
+            process. It loops through the database file using our regular expression
+            that matches all the entry blocks in the input file.
+        """
         for match in re.finditer(self._entry_regex, payload):
             entry_payload = match.group(0).rstrip().split("\n")
 
